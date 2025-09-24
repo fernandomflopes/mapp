@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Mini App + Stars</title>
+  </head>
+  <body>
+    <button id="buy">Comprar 500⭐</button>
+
+    <script>
+      const tg = window.Telegram.WebApp;
+      tg.ready(); tg.expand();
+
+      const endpoint = "https://6d38ba529ace.ngrok-free.app/create-invoice"
+
+      async function buy() {
+        // (1) ideal: valide tg.initData no backend antes de confiar no user_id
+        const userId = tg.initDataUnsafe?.user?.id;
+        const resp = await fetch(endpoint, {
+          method: "POST",
+          headers: {"content-type":"application/json"},
+          body: JSON.stringify({ user_id: userId, item: "Premium 30 dias", stars: 500 })
+        });
+        const { invoice_url } = await resp.json();
+
+        // (2) Abre o checkout dentro do Mini App
+        tg.openInvoice(invoice_url, (status) => {
+          // status: "paid" | "cancelled" | "failed" (ver docs)
+          if (status === "paid") tg.showAlert("Pagamento aprovado! 🎉");
+        });
+      }
+
+      document.getElementById("buy").addEventListener("click", buy);
+    </script>
+  </body>
+</html>
